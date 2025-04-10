@@ -19,16 +19,19 @@ class Game:
             elif event.type==pygame.VIDEORESIZE:
                 self.WIDTH,self.HEIGHT=event.w,event.h
                 self.screen=pygame.display.set_mode((self.WIDTH,self.HEIGHT),pygame.RESIZABLE)
-            elif event.type==pygame.KEYDOWN:
+
+    def handle_input(self,events):
+        for event in events:
+            if event.type==pygame.KEYDOWN:
                 if event.key==pygame.K_1:
-                    self.handle_choice("strict")
+                    self.handle_choice(1) #strict
                 elif event.key==pygame.K_2:
-                    self.handle_choice("lenient")
+                    self.handle_choice(2) #lenient
 
     def handle_choice(self, choice):
-        if choice == "strict":
+        if choice == 1: #strict
             self.satisfaction = max(0, self.satisfaction - 10)
-        elif choice == "lenient":
+        elif choice == 2: #lenient
             self.satisfaction = min(100, self.satisfaction + 10)
         print(f"Satisfaction: {self.satisfaction}")
 
@@ -51,6 +54,7 @@ class Game:
             self.draw_ui()
 
             self.handle_events(events)
+            self.handle_input(events)
 
             pygame.display.flip()
             self.clock.tick(60)
