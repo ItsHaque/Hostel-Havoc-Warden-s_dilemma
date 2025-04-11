@@ -1,7 +1,13 @@
 import pygame
+from student import Student,Actions
 
 class Game:
     def __init__(self):
+        self.students=[
+            Student("Abul",21),
+            Student("Babul",23),
+            Student("Dabul",22)
+        ]
         pygame.init()
         info=pygame.display.Info()
         self.WIDTH, self.HEIGHT = info.current_w,info.current_h-70
@@ -10,7 +16,7 @@ class Game:
         self.clock = pygame.time.Clock()
         self.running = True
  
-        self.satisfaction = 50  # 0 to 100
+        self.students_approval = 50  # 0 to 100
 
     def handle_events(self,events):
         for event in events:
@@ -24,24 +30,34 @@ class Game:
         for event in events:
             if event.type==pygame.KEYDOWN:
                 if event.key==pygame.K_1:
-                    self.handle_choice(1) #strict
+                    action=Actions.STRICT
                 elif event.key==pygame.K_2:
-                    self.handle_choice(2) #lenient
+                    action=Actions.STRICT
+                elif event.key==pygame.K_3:
+                    action=Actions.STRICT
+                self.handle_action(action)
 
-    def handle_choice(self, choice):
-        if choice == 1: #strict
-            self.satisfaction = max(0, self.satisfaction - 10)
-        elif choice == 2: #lenient
-            self.satisfaction = min(100, self.satisfaction + 10)
-        print(f"Satisfaction: {self.satisfaction}")
+    def handle_action(self, action):
+        for student in self.students:
+            student.update_happiness(action)
+        total_happiness=sum(student.Happiness for student in self.students)
+        self.students_approval=total_happiness//len(self.students)
 
     def draw_ui(self):
         font = pygame.font.SysFont("arial", 24)
-        text = font.render(f"Student Satisfaction: {self.satisfaction}", True, (255, 255, 255))
+        text = font.render(f"Student's Approval: {self.students_approval}", True, (255, 255, 255))
         self.screen.blit(text, (20, 20))
 
-        prompt = font.render("Press 1 to be Strict | Press 2 to be Lenient", True, (200, 200, 200))
+        prompt = font.render("Press 1 to be Strict | Press 2 to be Lenient | Press 3 to do nothing", True, (200, 200, 200))
         self.screen.blit(prompt, (20, 60))
+
+        #draw student info
+        y_offset=100
+        for student in self.students:
+            info=font.render(f"{student.name} | Happiness: {student.Happiness}",True,(188,188,255))
+            self.screen.blit(info,(20,y_offset))
+            y_offset+=30
+
 
     def run(self):
         while self.running:
