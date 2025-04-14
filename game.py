@@ -1,5 +1,8 @@
 import pygame
 from student import Student,Actions
+from event import Event,random_events
+import time
+import random
 
 class Game:
     def __init__(self):
@@ -17,10 +20,18 @@ class Game:
         self.selected_student=None
         self.sidebar_width=300
         self.info_button_rect=pygame.Rect(self.WIDTH-self.sidebar_width+20,20,260,40)
+
         self.clock = pygame.time.Clock()
         self.running = True
  
         self.students_approval = 50  # 0 to 100
+
+        self.active_event=None
+        self.event_start_time=None
+        self.event_duration=15
+        self.last_event_time=time.time()
+        self.event_font=pygame.font.SysFont("arial",20)
+        self.event_choice_rects=[]
 
     def handle_events(self,events):
         for event in events:
@@ -29,9 +40,18 @@ class Game:
             elif event.type==pygame.VIDEORESIZE:
                 self.WIDTH,self.HEIGHT=event.w,event.h
                 self.screen=pygame.display.set_mode((self.WIDTH,self.HEIGHT),pygame.RESIZABLE)
-                self.info_button_rect=pygame.rect(self.WIDTH-self.sidebar_width+20,20,260,40)
+                self.info_button_rect=pygame.Rect(self.WIDTH-self.sidebar_width+20,20,260,40)
             elif event.type==pygame.MOUSEBUTTONDOWN:
                 mx,my=pygame.mouse.get_pos()
+
+                if self.active_event and self.event_choice_rects:
+                    for idx,rect in enumerate(self.event_choice_rects):
+                        if rect.collidepoint(mx,my):
+                            self.active_event.apply_choices(idx,self.students)
+                            self.update_students_approval()
+                            self.active_event=None
+                            return
+
                 if self.info_button_rect.collidepoint(mx,my):
                     self.show_student_list=not self.show_student_list
                     self.selected_student=None
@@ -58,6 +78,10 @@ class Game:
     def handle_action(self, action):
         for student in self.students:
             student.update_happiness(action)
+        total_happiness=sum(student.Happiness for student in self.students)
+        self.students_approval=total_happiness//len(self.students)
+
+    def update_students_approval(self):
         total_happiness=sum(student.Happiness for student in self.students)
         self.students_approval=total_happiness//len(self.students)
 
@@ -97,6 +121,27 @@ class Game:
             render=detail_font.render(line,True,(255,255,255))
             self.screen.blit(render,(self.WIDTH-self.sidebar_width+20,y_offset))
             y_offset+=25
+        
+        if self.active_event:
+            x,y=50,self.HEIGHT//2
+            pygame.draw.rect(self.screen,(80,30,30),(x,y-20,self.WIDTH-100,150))
+            title=self.event_font.render(f"Event: {self.active_event.description}",True,(255,255,255))
+            self.screen.blit(title,(x+10,y))
+
+            self.event_choice_rects.clear()
+            for i,(label,_) in enumerate(self.active_event.choices):
+                button_rect=pygame.Rect(x+20,y+40+i*40,300,30)
+                pygame.draw.rect(self.screen,(120,60,60),button_rect)
+                text=self.event_font.render(label,True,(255,255,255))
+                self.screen.blit(text,(button_rect.x+10,button_rect.y+5))
+                self.event_choice_rects.append(button_rect)
+
+    def trigger_random_event(self):
+        self.active_event=random_events()
+        self.event_start_time=time.time()
+        self.last_event_time=time.time()
+        self.event_choice_rects=[]
+
 
     def run(self):
         while self.running:
@@ -110,6 +155,11 @@ class Game:
 
             self.handle_events(events)
             self.handle_input(events)
+            
+            current_time=time.time()
+            if not self.active_event and current_time-self.last_event_time>self.event_duration:
+                self.trigger_random_event()
+
             self.draw_ui()
             pygame.display.flip()
             self.clock.tick(60)
