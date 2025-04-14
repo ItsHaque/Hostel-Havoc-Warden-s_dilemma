@@ -34,7 +34,7 @@ class Student:
         self.Happiness=max(0,min(100,self.Happiness+change))
     
     def __str__(self):
-        traits_string=",".join([f"{trait.name.capitalize()}: {value}" for trait,value in self.traits.items()])
-        return f"name: {self.name} | age: {self.age} | Happiness: {self.Happiness} | Traits: {traits_string}"
+        traits_string="\n".join([f"{trait.name.capitalize()}: {value}" for trait,value in self.traits.items()])
+        return f"Name: {self.name} \n Age: {self.age} \n Happiness: {self.Happiness} \n Traits: \n {traits_string}"
     
 
