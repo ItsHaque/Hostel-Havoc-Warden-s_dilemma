@@ -74,9 +74,9 @@ class Game:
                 if event.key==pygame.K_1:
                     action=Actions.STRICT
                 elif event.key==pygame.K_2:
-                    action=Actions.STRICT
+                    action=Actions.LENIENT
                 elif event.key==pygame.K_3:
-                    action=Actions.STRICT
+                    action=Actions.INDIFFERENT
                 self.handle_action(action)
 
     def handle_action(self, action):
@@ -129,11 +129,12 @@ class Game:
         #selected student info
         y_offset=300
         detail_font=pygame.font.SysFont("arial",18)
-        lines=str(self.selected_student).split("\n")
-        for line in lines:
-            render=detail_font.render(line,True,(255,255,255))
-            self.screen.blit(render,(self.WIDTH-self.sidebar_width+20,y_offset))
-            y_offset+=25
+        if self.selected_student:
+            lines=str(self.selected_student).split("\n")
+            for line in lines:
+                render=detail_font.render(line,True,(255,255,255))
+                self.screen.blit(render,(self.WIDTH-self.sidebar_width+20,y_offset))
+                y_offset+=25
         
         if self.active_event:
             x,y=50,self.HEIGHT//2
