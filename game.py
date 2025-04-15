@@ -47,7 +47,7 @@ class Game:
             Actions.INDIFFERENT: pygame.Rect(360,140,150,40)
         }
 
-
+        self.clicked_button=None
 
     def handle_events(self,events):
         for event in events:
@@ -66,6 +66,7 @@ class Game:
                             self.active_event.apply_choices(idx,self.students)
                             self.update_students_approval()
                             self.active_event=None
+                            self.clicked_button=f"event_{idx}"
                             return
 
                 if self.info_button_rect.collidepoint(mx,my):
@@ -81,8 +82,31 @@ class Game:
                 
                 for action,rect in self.action_buttons.items():
                     if rect.collidepoint(mx,my):
+                        self.clicked_button=action
                         self.handle_action(action)
                         return
+            elif event.type==pygame.MOUSEBUTTONUP:
+                mx,my=pygame.mouse.get_pos()
+
+                for action,rect in self.action_buttons.items():
+                    if rect.collidepoint(mx,my):
+                        self.clicked_button=None
+                        # self.handle_action(action)
+                        return
+                if self.info_button_rect.collidepoint(mx,my) and self.clicked_button=="info":
+                    self.show_student_list=not self.show_student_list
+                    self.selected_student=None
+                    self.clicked_button=None
+
+                if self.active_event and self.event_choice_rects:
+                    for idx,rect in enumerate(self.event_choice_rects):
+                        if rect.collidepoint(mx,my) and self.clicked_button==f"event_{idx}":
+                            self.active_event.apply_choices(idx,self.students)
+                            # self.update_students_approval()
+                            self.active_event=None
+                            self.clicked_button=None
+                            return
+                self.clicked_button=None
 
     def handle_action(self, action):
         changes={}
@@ -122,7 +146,8 @@ class Game:
         pygame.draw.rect(self.screen,(50,50,70),(self.WIDTH-self.sidebar_width,0,self.sidebar_width,self.HEIGHT))
 
         #info button
-        pygame.draw.rect(self.screen,(100,100,200),self.info_button_rect)
+        info_color=(150,150,150) if self.clicked_button=="info" else (100,100,200)
+        pygame.draw.rect(self.screen,info_color,self.info_button_rect)
         button_text=font.render("Show Students Info",True,(255,255,255))
         self.screen.blit(button_text,(self.info_button_rect.x+10,self.info_button_rect.y+5))
 
@@ -156,13 +181,19 @@ class Game:
             self.event_choice_rects.clear()
             for i,(label,_) in enumerate(self.active_event.choices):
                 button_rect=pygame.Rect(x+20,y+40+i*40,300,30)
-                pygame.draw.rect(self.screen,(120,60,60),button_rect)
+                color=(180,100,100) if self.clicked_button==f"event_{i}" else (120,60,60)
+                pygame.draw.rect(self.screen,color,button_rect)
                 text=self.event_font.render(label,True,(255,255,255))
                 self.screen.blit(text,(button_rect.x+10,button_rect.y+5))
                 self.event_choice_rects.append(button_rect)
 
         for action,rect in self.action_buttons.items():
-            pygame.draw.rect(self.screen,(100,100,100),rect)
+            if self.clicked_button==action:
+                color=(150,150,150)
+            else:
+                color=(100,100,100)
+                
+            pygame.draw.rect(self.screen,color,rect)
             label=font.render(action.name.capitalize(),True,(255,255,255))
             self.screen.blit(label,(rect.x+10,rect.y+5))
 
@@ -192,7 +223,7 @@ class Game:
             ]
             color=(200,200,0)
         
-        y_offset=self.HEIGHT//2-(len(lines)*30)//2
+        y_offset=self.HEIGHT//2-(len(lines)*100)//2
         for line in lines:
             text_suface=font.render(line,True,color)
             self.screen.blit(text_suface,(self.WIDTH//2-text_suface.get_width()//2,y_offset))
@@ -200,13 +231,13 @@ class Game:
         
         sub_font=pygame.font.SysFont("arial",24)
         score_text=sub_font.render(f"Final Approval: {self.students_approval}",True,(200,200,200))
-        self.screen.blit(score_text,(self.WIDTH//2-score_text.get_width()//2,self.HEIGHT//2+80))
+        self.screen.blit(score_text,(self.WIDTH//2-score_text.get_width()//2,self.HEIGHT//2))
         thanks_text=sub_font.render("Thanks for playing",True,(150,150,255))
-        self.screen.blit(thanks_text,(self.WIDTH//2-thanks_text.get_width()//2,self.HEIGHT//2+120))
+        self.screen.blit(thanks_text,(self.WIDTH//2-thanks_text.get_width()//2,self.HEIGHT//2+50))
         
         button_font=pygame.font.SysFont("arial",24)
-        restart_rect=pygame.Rect(self.WIDTH//2-100,self.HEIGHT-100,200,50)
-        quit_rect=pygame.Rect(self.WIDTH//2-100,self.HEIGHT-50,200,50)
+        restart_rect=pygame.Rect(self.WIDTH//2-300,self.HEIGHT-200,200,50)
+        quit_rect=pygame.Rect(self.WIDTH//2,self.HEIGHT-200,200,50)
         restart_color=(0,200,0)
         quit_color=(200,0,0)
 
