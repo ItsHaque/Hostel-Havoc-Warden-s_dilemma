@@ -19,8 +19,15 @@ class Student:
         self.age=age
         self.Happiness=50
         self.traits={trait: random.randint(20,80) for trait in Traits}
+        self.friendship={}
+        self.friends=[]
+
+    def add_friend(self,friend):
+        if friend not in self.friends:
+            self.friends.append(friend)
 
     def update_happiness(self,action: Actions):
+        change=0
         if action==Actions.STRICT:
             factor=1+self.traits[Traits.STUBBORNNESS]/100
             change=int(-5*factor)
@@ -32,9 +39,11 @@ class Student:
             change=int(-3*factor) 
         
         self.Happiness=max(0,min(100,self.Happiness+change))
+        return change
     
     def __str__(self):
         traits_string="\n".join([f"{trait.name.capitalize()}: {value}" for trait,value in self.traits.items()])
-        return f"Name: {self.name} \n Age: {self.age} \n Happiness: {self.Happiness} \n Traits: \n {traits_string}"
+        friends_string=", ".join([friend.name for friend in self.friends]) if self.friends else None
+        return f"Name: {self.name} \nAge: {self.age} \nHappiness: {self.Happiness} \nTraits: \n{traits_string} \nFriends: \n{friends_string}"
     
 

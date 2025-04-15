@@ -8,10 +8,14 @@ class Game:
     def __init__(self):
         pygame.init()
         self.students=[
-            Student("Abul",21),
-            Student("Babul",23),
-            Student("Dabul",22)
+            Student("Abul",random.randint(15,25)),
+            Student("Babul",random.randint(15,25)),
+            Student("Dabul",random.randint(15,25)),
+            Student("Eabul",random.randint(15,25)),
+            Student("Fabul",random.randint(15,25))
         ]
+        self.set_up_friendship()
+        
         self.WIDTH, self.HEIGHT = 1200,600
         self.screen = pygame.display.set_mode((self.WIDTH, self.HEIGHT),pygame.RESIZABLE)
         pygame.display.set_caption("Hostel Havoc: Warden's Dilemma")
@@ -40,7 +44,7 @@ class Game:
         self.action_buttons={
             Actions.STRICT: pygame.Rect(20,140,150,40),
             Actions.LENIENT: pygame.Rect(190,140,150,40),
-            Actions.INDIFFERENT: pygame.Rect(360,140,180,40)
+            Actions.INDIFFERENT: pygame.Rect(360,140,150,40)
         }
 
 
@@ -79,24 +83,20 @@ class Game:
                     if rect.collidepoint(mx,my):
                         self.handle_action(action)
                         return
-                 
-
-    def handle_input(self,events):
-        for event in events:
-            if event.type==pygame.KEYDOWN:
-                if event.key==pygame.K_1:
-                    action=Actions.STRICT
-                elif event.key==pygame.K_2:
-                    action=Actions.LENIENT
-                elif event.key==pygame.K_3:
-                    action=Actions.INDIFFERENT
-                self.handle_action(action)
 
     def handle_action(self, action):
+        changes={}
         for student in self.students:
-            student.update_happiness(action)
-        total_happiness=sum(student.Happiness for student in self.students)
-        self.students_approval=total_happiness//len(self.students)
+            change= student.update_happiness(action)
+            changes[student.name]=change
+        
+        for student in self.students:
+            for friend_name,fship_score in student.friendship.items():
+                friend_change=changes.get(friend_name,0)
+                shared_effect=int(friend_change*(fship_score/200))
+                student.Happiness=max(0,min(100,student.Happiness+shared_effect))
+
+        self.update_students_approval()
         if self.current_day<self.max_days:
             self.current_day+=1
         else:
@@ -117,8 +117,6 @@ class Game:
 
         text = font.render(f"Student's Approval: {self.students_approval}", True, (255, 255, 255))
         self.screen.blit(text, (20, 60))
-        prompt = font.render("Press 1 to be Strict | Press 2 to be Lenient | Press 3 to do nothing", True, (200, 200, 200))
-        self.screen.blit(prompt, (20, 100))
 
         #sidebar
         pygame.draw.rect(self.screen,(50,50,70),(self.WIDTH-self.sidebar_width,0,self.sidebar_width,self.HEIGHT))
@@ -238,6 +236,19 @@ class Game:
                     elif quit_rect.collidepoint(mx,my):
                         return False
         
+    def set_up_friendship(self):
+        for i,st1 in enumerate(self.students):
+            for j in range(i+1,len(self.students)):
+                st2=self.students[j]
+                matching_traits=0
+
+                for trait in st1.traits:
+                    if abs(st1.traits[trait]-st2.traits[trait])<10:
+                        matching_traits+=1
+                
+                if matching_traits>=3:
+                    st1.add_friend(st2)
+                    st2.add_friend(st1)
 
     def run(self):
         while self.running:
@@ -251,7 +262,6 @@ class Game:
             
 
             self.handle_events(events)
-            self.handle_input(events)
             
             current_time=time.time()
             if not self.active_event and current_time-self.last_event_time>self.event_duration:
