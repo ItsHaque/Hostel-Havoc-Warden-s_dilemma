@@ -37,6 +37,14 @@ class Game:
 
         self.user_quit=False
 
+        self.action_buttons={
+            Actions.STRICT: pygame.Rect(20,140,150,40),
+            Actions.LENIENT: pygame.Rect(190,140,150,40),
+            Actions.INDIFFERENT: pygame.Rect(360,140,180,40)
+        }
+
+
+
     def handle_events(self,events):
         for event in events:
             if event.type==pygame.QUIT:
@@ -66,7 +74,12 @@ class Game:
                         if student_rect.collidepoint(mx,my):
                             self.selected_student=student
                             break
-                    
+                
+                for action,rect in self.action_buttons.items():
+                    if rect.collidepoint(mx,my):
+                        self.handle_action(action)
+                        return
+                 
 
     def handle_input(self,events):
         for event in events:
@@ -150,7 +163,10 @@ class Game:
                 self.screen.blit(text,(button_rect.x+10,button_rect.y+5))
                 self.event_choice_rects.append(button_rect)
 
-        
+        for action,rect in self.action_buttons.items():
+            pygame.draw.rect(self.screen,(100,100,100),rect)
+            label=font.render(action.name.capitalize(),True,(255,255,255))
+            self.screen.blit(label,(rect.x+10,rect.y+5))
 
     def trigger_random_event(self):
         self.active_event=random_events()
