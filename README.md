@@ -2,5 +2,5 @@ Hostel Havoc: Warden’s Dilemma is a choice-driven simulation game where you pl
 
 Tools used:
 
-Language: Python
+Language: Python\n
 Libraries: Pygame
